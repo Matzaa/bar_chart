@@ -18,34 +18,10 @@
             .style("background-color", "pink");
         const padding = 50;
         const barW = w / data.length / 2;
-        // create x & y scales
-        var years = data.map((item) => {
-            var quarter;
-            var temp = item[0].substring(5, 7);
-
-            if (temp === "01") {
-                quarter = "Q1";
-            } else if (temp === "04") {
-                quarter = "Q2";
-            } else if (temp === "07") {
-                quarter = "Q3";
-            } else if (temp === "10") {
-                quarter = "Q4";
-            }
-
-            return item[0].substring(0, 4) + " " + quarter;
-        });
 
         var yearsDate = data.map((item) => {
             return new Date(item[0]);
         });
-
-        console.log("years ", years);
-
-        const xWidthScale = d3
-            .scaleLinear()
-            .domain([0, data.length])
-            .range([padding, w - padding]);
 
         const yHeightScale = d3
             .scaleLinear()
@@ -54,46 +30,55 @@
 
         const xScale = d3
             .scaleTime()
-            .domain([d3.min(yearsDate), d3.max(data, (d) => d[0].slice(0, 4))])
+            .domain([d3.min(yearsDate), d3.max(yearsDate)])
             .range([padding, w - padding]);
 
         const yScale = d3
             .scaleLinear()
             .domain([0, d3.max(data, (d) => d[1])])
             .range([h - padding, padding]);
+        // tooltip
 
+        let tooltip = d3
+            .select("body")
+            .append("div")
+            .attr("id", "tooltip")
+            .style("width", 100)
+            .style("height", 50)
+            .style("z-index", "10")
+            .style("visibility", "hidden")
+            .text("hey");
         // bars
 
         svg.selectAll("rect")
             .data(data)
             .enter()
             .append("rect")
-            .attr("x", (d, i) => xWidthScale(i))
+            .attr("x", (d, i) => xScale(yearsDate[i]))
             .attr("y", (d) => yScale(d[1]))
-            .attr("width", barW)
-            .attr("height", (d, i) => yHeightScale(d[1]) - padding)
             .attr("fill", "beige")
             .attr("class", "bar")
-            .attr("data-date", (d) => d[0].slice(0, 4))
+            .attr("data-date", (d, i) => data[i][0])
             .attr("data-gdp", (d) => d[1])
-            // .append("title")
-            // .attr("id", "tooltip")
-            // .text((d) => `${d[0].slice(0, 4)}, ${d[1]}`);
-            .on("mouseover", (d) => {
-                // console.log("i ", d);
-                const tooltip = document.getElementById("tooltip");
-                tooltip.setAttribute(
-                    "x",
-                    document.getElementsByClassName("bar")[0].getAttribute("x")
-                );
-                tooltip.setAttribute("y", h - padding * 2);
+            .attr("i", (d, i) => i)
+            .attr("width", barW)
+            .attr("height", (d, i) => yHeightScale(d[1]) - padding)
+            .on("mouseover", function (event, i) {
+                tooltip
+                    .style("left", this.getAttribute("i") * barW + "px")
+                    .style("top", h - 100 + "px")
+                    .style(
+                        "transform",
+                        `translateX(${this.getAttribute("i")} px)`
+                    )
+                    .attr("data-date", this.getAttribute("data-date"));
+                tooltip.attr("data-gdp", this.getAttribute("data-gdp"));
+                tooltip.style("visibility", "visible");
+                tooltip.text(` ${this.getAttribute("data-gdp")}`);
+            })
+            .on("mouseout", () => {
+                tooltip.style("visibility", "hidden");
             });
-        // tooltip
-
-        svg.append("rect")
-            .attr("id", "tooltip")
-            .attr("width", 100)
-            .attr("height", 100);
 
         // create axis
 

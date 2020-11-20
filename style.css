@@ -10,6 +10,7 @@ body {
 
 .bar:hover {
     fill: rgb(255, 123, 123);
+    position: relative;
 }
 
 h1 {
@@ -20,6 +21,7 @@ h1 {
 }
 
 #tooltip {
-    color: red;
     background-color: blue;
+    position: absolute;
+    border: 3px solid black;
 }
